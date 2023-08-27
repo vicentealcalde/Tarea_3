@@ -7,6 +7,8 @@ WORKDIR /build
 COPY . /build/
 RUN pip install build && \
     python -m build --wheel
+COPY load_data.py /app/
+
 
 FROM python:3.11-alpine as prod
 RUN pip install -U pip
