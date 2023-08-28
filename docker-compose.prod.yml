@@ -1,8 +1,9 @@
+version: "3.8"
 services:
   backend:
     build:
-      context: backend/
-      dockerfile: ./Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
       target: prod
     container_name: backend
     networks:
