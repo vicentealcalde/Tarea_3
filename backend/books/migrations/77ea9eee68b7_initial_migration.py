@@ -51,8 +51,8 @@ def upgrade() -> None:
     Session = sessionmaker(bind=db.engine)
     session = Session()
     # ### end Alembic commands ###
-    authors_csv_path = "database_files/authors.csv"
-    books_csv_path = "database_files/books.csv"
+    authors_csv_path = "./authors.csv"
+    books_csv_path = "./books.csv"
     ratings_csv_path = "database_files/ratings.csv"
 
      # Load data from CSV files
