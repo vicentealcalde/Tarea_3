@@ -9,11 +9,6 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-import csv
-from sqlalchemy.orm import sessionmaker
-from backend.books.models import Author, Book, Rating  # Ajusta la importación según la ubicación real de tus modelos
-from pathlib import Path
-from backend.db import db 
 
 
 # revision identifiers, used by Alembic.
@@ -47,43 +42,8 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['book_id'], ['book.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-
-    Session = sessionmaker(bind=db.engine)
-    session = Session()
+    
     # ### end Alembic commands ###
-    authors_csv_path = "./authors.csv"
-    books_csv_path = "./books.csv"
-    ratings_csv_path = "database_files/ratings.csv"
-
-     # Load data from CSV files
-    with open(authors_csv_path, "r", encoding="utf-8") as authors_file:
-        csv_reader = csv.DictReader(authors_file, delimiter=";")
-        for row in csv_reader:
-            author = Author(name=row["name"], openlibrary_key=row["key"])
-            session.add(author)
-    session.commit()
-
-    with open(books_csv_path, "r", encoding="utf-8") as books_file:
-        csv_reader = csv.DictReader(books_file, delimiter=";")
-        for row in csv_reader:
-            author = session.query(Author).filter_by(openlibrary_key=row["author"]).first()
-            book = Book(
-                title=row["title"],
-                openlibrary_key=row["key"],
-                author=author,
-                description=row["description"]
-            )
-            session.add(book)
-    session.commit()
-
-    with open(ratings_csv_path, "r", encoding="utf-8") as ratings_file:
-        csv_reader = csv.DictReader(ratings_file, delimiter=";")
-        for row in csv_reader:
-            book = session.query(Book).filter_by(openlibrary_key=row["work"]).first()
-            rating = Rating(book=book, score=row["score"])
-            session.add(rating)
-    session.commit()
-
 
 
 def downgrade() -> None:
