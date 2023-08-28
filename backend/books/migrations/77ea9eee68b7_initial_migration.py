@@ -9,6 +9,11 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+import csv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from books.models import Author, Book, Rating
+import os
 
 
 # revision identifiers, used by Alembic.
@@ -16,6 +21,8 @@ revision: str = '77ea9eee68b7'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = ('default',)
 depends_on: Union[str, Sequence[str], None] = None
+
+
 
 
 def upgrade() -> None:
@@ -42,7 +49,52 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['book_id'], ['book.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    '''
     
+    
+    '''
+def poblate():
+    # Configura la conexión a la base de datos
+    DATABASE_URI = "postgresql://postgres:postgres@db/postgres"
+    engine = create_engine(DATABASE_URI)
+
+    # Crea una sesión para interactuar con la base de datos
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    script_directory = os.path.dirname(__file__)
+    db_file_folder = os.path.join(script_directory, 'db_files')
+    authors_csv_path = os.path.join(db_file_folder, 'authors.csv')
+    books_csv_path = os.path.join(db_file_folder, 'books.csv')
+    ratings_csv_path = os.path.join(db_file_folder, 'ratings.csv')
+    
+
+    # Llena la tabla Author desde authors.csv
+    with open(authors_csv_path, 'r') as authors_file:
+        authors_reader = csv.DictReader(authors_file, delimiter=';')
+        for row in authors_reader:
+            author = Author(name=row['name'], openlibrary_key=row['key'])
+            session.add(author)
+
+    # Llena la tabla Book desde books.csv
+    with open(books_csv_path, 'r') as books_file:
+        books_reader = csv.DictReader(books_file, delimiter=';')
+        for row in books_reader:
+            author_id = row['author']
+            # ... Lógica para obtener el ID del autor si es necesario
+            book = Book(title=row['title'], openlibrary_key=row['key'], author_id=author_id, description=row['description'])
+            session.add(book)
+
+    # Llena la tabla Rating desde ratings.csv
+    with open(ratings_csv_path, 'r') as ratings_file:
+        ratings_reader = csv.DictReader(ratings_file, delimiter=';')
+        for row in ratings_reader:
+            book_id = row['work']
+            # ... Lógica para obtener el ID del libro si es necesario
+            rating = Rating(book_id=book_id, score=row['score'])
+            session.add(rating)
+
+    # Guarda los cambios en la base de datos
+    session.commit()
     # ### end Alembic commands ###
 
 

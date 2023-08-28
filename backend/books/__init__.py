@@ -1,13 +1,13 @@
-import csv
-import os
-from flask import Flask
+from flask import Flask, make_response
 from flask import render_template, url_for
 from werkzeug.middleware.proxy_fix import ProxyFix
-from backend.books.models import Rating
 from flask_alembic import Alembic
 from .db import db
 from books.models import Author, Book
 from itertools import chain
+import csv
+from alembic import op
+import os 
 
 
 def create_app():
@@ -55,6 +55,7 @@ def create_app():
                 'average_score': 0 if len(book.ratings) == 0 else sum(map(lambda x: x.score, book.ratings))/len(book.ratings)
             })
         return render_template('books.html', books=books_dicts)
+    
     
     def populate_db():
         script_directory = os.path.dirname(__file__)
@@ -106,5 +107,10 @@ def create_app():
                 db.session.commit()
             except Exception as e:
                 print("An error occurred while populating the database: ", e)
-    
+        response = "data cargada"
     populate_db()
+
+
+    return app
+
+    
