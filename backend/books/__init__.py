@@ -3,12 +3,13 @@ from flask import render_template, url_for
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_alembic import Alembic
 from .db import db
-from books.models import Author, Book
+from books.models import Author, Book, Rating
 from itertools import chain
 import csv
 from alembic import op
 import os 
 
+cont = 0
 
 def create_app():
     # create and configure the app
@@ -56,10 +57,10 @@ def create_app():
             })
         return render_template('books.html', books=books_dicts)
     
-    
+    @app.route('/populate')
     def populate_db():
         script_directory = os.path.dirname(__file__)
-        db_file_folder = os.path.join(script_directory, 'db_files')
+        db_file_folder = os.path.join(script_directory, 'database_files')
         authors_csv_path = os.path.join(db_file_folder, 'authors.csv')
         books_csv_path = os.path.join(db_file_folder, 'books.csv')
         ratings_csv_path = os.path.join(db_file_folder, 'ratings.csv')
@@ -70,15 +71,18 @@ def create_app():
                     authors_reader = csv.DictReader(authors_file, delimiter=';')
                     for row in authors_reader:
                         try:
-                            author = Author(name=row['name'], openlibrary_id=row['key'])
+                            author = Author(name=row['name'], openlibrary_key=row['key'])
                             db.session.add(author)
+                            
                         except Exception as e:
                             print("Wrong key for row: ", row)
+                            
                 db.session.commit()
                 
                 with open(books_csv_path, 'r') as books_file:
                     books_reader = csv.DictReader(books_file, delimiter=';')
                     for row in books_reader:
+                        
                         try:
                             author_id = row['author']
                             if author_id.startswith('/authors/'):
@@ -100,17 +104,23 @@ def create_app():
                 with open(ratings_csv_path, 'r') as ratings_file:
                     ratings_reader = csv.DictReader(ratings_file, delimiter=';')
                     for row in ratings_reader:
-                        book = Book.query.filter_by(openlibrary_key=row['book']).first()
+                        book = Book.query.filter_by(openlibrary_key=row['work']).first()
                         rating = Rating(book_id=book.id, score=row['score'])
                         db.session.add(rating)
                         
                 db.session.commit()
+                
             except Exception as e:
                 print("An error occurred while populating the database: ", e)
+                
         response = "data cargada"
-    populate_db()
 
+    # if not os.path.exists('database_initialized.txt'):
+    #     populate_db()
+    #     with open('database_initialized.txt', 'w') as f:
+    #         f.write('initialized')
 
+            
     return app
 
     

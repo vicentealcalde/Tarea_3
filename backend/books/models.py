@@ -18,3 +18,5 @@ class Rating(db.Model):
     book_id = db.Column(sa.ForeignKey('book.id'))
     book = sa.orm.relationship("Book", back_populates="ratings")
     score = db.Column(db.Integer)
+    
+
